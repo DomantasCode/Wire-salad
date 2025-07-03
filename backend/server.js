@@ -17,12 +17,24 @@ const MONGO_URI = process.env.MONGO_URI;
 
 // --- MIDDLEWARE ---
 
-// Configure CORS to only allow requests from your live frontend domain
+// ** UPDATED CORS CONFIGURATION FOR PRODUCTION **
+// This allows requests from both the 'www' and non-'www' versions of your domain.
+const allowedOrigins = ['https://www.dmcademy.com', 'https://dmcademy.com'];
+
 const corsOptions = {
-    origin: 'https://www.dmcademy.com',
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
+
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
