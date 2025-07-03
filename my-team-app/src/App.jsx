@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+// --- CONFIGURATION ---
+// Use this single constant for all API calls.
+const API_BASE_URL = 'https://wire-salad-api.onrender.com';
+
 // Department to color mapping for consistent styling
 const departmentColors = {
     'Upper Management': { bg: 'bg-red-100', text: 'text-red-800' },
@@ -74,7 +78,7 @@ const App = () => {
 
     // DATA FETCHING
     useEffect(() => {
-        fetch('http://localhost:3001/api/people')
+        fetch(`${API_BASE_URL}/api/people`)
             .then(response => response.json())
             .then(data => { setPeople(data); setIsLoading(false); })
             .catch(error => { console.error("Error fetching data:", error); setIsLoading(false); });
@@ -86,7 +90,7 @@ const App = () => {
     const handleAddPerson = async (personData) => {
         setIsSaving(true);
         try {
-            const response = await fetch('http://localhost:3001/api/people', {
+            const response = await fetch(`${API_BASE_URL}/api/people`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', }, body: JSON.stringify(personData),
             });
             if (!response.ok) throw new Error('Network response was not ok');
@@ -101,7 +105,7 @@ const App = () => {
     const handleUpdatePerson = async (personData) => {
         setIsSaving(true);
         try {
-            const response = await fetch(`http://localhost:3001/api/people/${personData._id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/people/${personData._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(personData),
@@ -120,9 +124,8 @@ const App = () => {
 
     // DELETE
     const handleDeletePerson = useCallback(async (id) => {
-        setShowConfirmation(false);
         try {
-            const response = await fetch(`http://localhost:3001/api/people/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/people/${id}`, {
                 method: 'DELETE',
             });
             if (!response.ok && response.status !== 204) {
@@ -130,6 +133,7 @@ const App = () => {
             }
             setPeople(prevPeople => prevPeople.filter(p => p._id !== id));
             closeFormsAndPanes();
+            setShowConfirmation(false);
             setPersonToDeleteId(null);
         } catch (error) {
             console.error('Error deleting person:', error);

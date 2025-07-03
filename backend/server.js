@@ -1,23 +1,43 @@
-// backend/server.js - MERN Version
+// Complete and final backend/server.js for deployment
+
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import Person from './personModel.js'; // Import our new Mongoose model
+import Person from './personModel.js'; // Import our Mongoose model
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load environment variables from .env file
+// --- SETUP ---
+// Load environment variables from .env file for local development
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app = express();
+// Render sets a PORT environment variable, so we use that. For local, we use 3001.
 const PORT = process.env.PORT || 3001;
+const MONGO_URI = process.env.MONGO_URI;
 
-// --- Middleware ---
-app.use(cors());
+// --- MIDDLEWARE ---
+
+// ** THIS IS THE CRITICAL UPDATE FOR PHASE 3 **
+// Configure CORS to only allow requests from your live frontend domain
+const corsOptions = {
+    origin: 'https://www.dmcademy.com',
+    optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// --- Database Connection ---
-mongoose.connect(process.env.MONGO_URI)
+// --- PRODUCTION: SERVE FRONTEND FILES ---
+// This tells Express to serve the built React app from the 'dist' folder
+app.use(express.static(path.join(__dirname, '../my-team-app/dist')));
+
+// --- DATABASE CONNECTION ---
+mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ Successfully connected to MongoDB Atlas'))
     .catch(err => console.error('❌ Connection error', err));
 
@@ -36,7 +56,6 @@ app.get('/api/people', async (req, res) => {
 // POST /api/people - Add a new person
 app.post('/api/people', async (req, res) => {
     try {
-        // Note: The `_id` will be created automatically by MongoDB
         const newPerson = new Person(req.body);
         const savedPerson = await newPerson.save();
         res.status(201).json(savedPerson);
@@ -69,7 +88,14 @@ app.put('/api/people/:id', async (req, res) => {
     }
 });
 
+// --- PRODUCTION: "CATCH-ALL" ROUTE ---
+// This must be the LAST route. It sends the React app's index.html for any
+// request that doesn't match an API route.
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../my-team-app/dist', 'index.html'));
+});
+
 // --- START SERVER ---
 app.listen(PORT, () => {
-    console.log(`🚀 Backend server is running on http://localhost:${PORT}`);
+    console.log(`🚀 Backend server is running on port ${PORT}`);
 });
