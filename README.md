@@ -1,5 +1,7 @@
 Check it out on - www.dmcademy.com
 
+Used server for backend was free it might take up to minute for data to load
+
 ## Technologies Used
 
 * **Frontend:**
